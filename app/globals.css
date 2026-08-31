@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0e0b08;
+  --bg-elevated: #17130e;
+  --bg-elevated-2: #1f1a12;
+
+  --accent-brass: #c9a24b;
+  --accent-brass-dim: #8a6f35;
+
+  --danger: #8b1e1e;
+  --success: #7a8b4a;
+
+  --text-100: #ede4d3;
+  --text-72: rgb(237 228 211 / 0.72);
+  --text-48: rgb(237 228 211 / 0.48);
+  --text-28: rgb(237 228 211 / 0.28);
+
+  --border-hairline: rgb(201 162 75 / 0.14);
+  --border-hairline-strong: rgb(201 162 75 / 0.28);
+
+  --shadow-brass: 0 12px 28px -8px rgb(201 162 75 / 0.25), 0 2px 6px rgb(14 11 8 / 0.5);
+  --shadow-panel: 0 8px 24px -6px rgb(14 11 8 / 0.6);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-elevated-2: var(--bg-elevated-2);
+  --color-brass: var(--accent-brass);
+  --color-brass-dim: var(--accent-brass-dim);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-text-100: var(--text-100);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-geist);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+* {
+  border-color: var(--border-hairline);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-100);
+  font-family: var(--font-geist), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent-brass);
+  color: var(--bg);
+}
+
+/* Fixed, pointer-events-none film-grain texture. Never applied to scrolling
+   containers directly (Section 6.E) — it lives once at the viewport root. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+
+@keyframes vignette-pulse {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
