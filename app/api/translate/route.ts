@@ -10,11 +10,25 @@ interface MyMemoryResponse {
   matches?: MyMemoryMatch[];
 }
 
-export async function GET(request: NextRequest) {
-  const word = request.nextUrl.searchParams.get("word")?.trim() ?? "";
+// MyMemory's translation-memory entries are crowd-sourced and inconsistently
+// styled (stray quotes, a trailing full stop on a single-word gloss, random
+// capitalization) — normalize them into a plain lowercase gloss.
+function cleanTranslation(raw: string): string {
+  let t = raw.trim();
+  t = t.replace(/^["'‘’“”]+|["'‘’“”]+$/g, "").trim();
+  t = t.replace(/[.!?]+$/, "").trim();
+  if (t.length > 1 && t !== t.toUpperCase()) {
+    t = t.charAt(0).toLowerCase() + t.slice(1);
+  }
+  return t;
+}
 
-  if (!word || !/^[A-Za-z' -]+$/.test(word)) {
-    return NextResponse.json({ word, translation: null });
+export async function GET(request: NextRequest) {
+  const raw = request.nextUrl.searchParams.get("word")?.trim() ?? "";
+  const word = raw.toLowerCase();
+
+  if (!word || !/^[a-z' -]+$/.test(word)) {
+    return NextResponse.json({ word: raw, translation: null });
   }
 
   try {
@@ -37,11 +51,12 @@ export async function GET(request: NextRequest) {
 
     const best = candidates
       .map((c) => ({ translation: c.translation?.trim(), match: c.match ?? 0 }))
-      .filter((c) => c.translation && c.translation.toLowerCase() !== word.toLowerCase())
+      .filter((c) => c.translation && c.translation.toLowerCase() !== word)
       .sort((a, b) => b.match - a.match)[0];
 
-    return NextResponse.json({ word, translation: best?.translation ?? null });
+    const translation = best ? cleanTranslation(best.translation!) : null;
+    return NextResponse.json({ word: raw, translation: translation || null });
   } catch {
-    return NextResponse.json({ word, translation: null });
+    return NextResponse.json({ word: raw, translation: null });
   }
 }
