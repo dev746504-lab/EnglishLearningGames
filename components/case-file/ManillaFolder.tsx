@@ -19,22 +19,37 @@ interface ManillaFolderProps {
   score: number;
 }
 
-function highlightWords(text: string, words: WordRecap[]) {
-  if (words.length === 0) return [text];
+// Every alphabetic token gets a hover tooltip with its Vietnamese meaning.
+// Vault words (which can be multi-word phrases, e.g. "cut corners") are
+// matched as whole phrases first and keep their locked-in definition; every
+// other word is tokenized individually and looked up on hover (WordTooltip).
+function renderGenericWords(segment: string, keyPrefix: string) {
+  const tokens = segment.split(/([A-Za-z']+)/);
+  return tokens.map((token, i) =>
+    /[A-Za-z]/.test(token) ? (
+      <WordTooltip key={`${keyPrefix}-${i}`} word={token} />
+    ) : (
+      <Fragment key={`${keyPrefix}-${i}`}>{token}</Fragment>
+    )
+  );
+}
+
+function renderStory(text: string, words: WordRecap[]) {
+  if (words.length === 0) return renderGenericWords(text, "s");
+
+  const wordMap = new Map(words.map((w) => [w.word.toLowerCase(), w]));
   const escaped = [...words]
     .sort((a, b) => b.word.length - a.word.length)
     .map((w) => w.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
-  const parts = text.split(pattern);
-  const wordMap = new Map(words.map((w) => [w.word.toLowerCase(), w]));
+  const segments = text.split(pattern);
 
-  return parts.map((part, i) => {
-    const match = wordMap.get(part.toLowerCase());
-    return match ? (
-      <WordTooltip key={i} word={part} ipa={match.ipa} definition={match.definition} />
-    ) : (
-      <Fragment key={i}>{part}</Fragment>
-    );
+  return segments.flatMap((segment, i) => {
+    const known = wordMap.get(segment.toLowerCase());
+    if (known) {
+      return [<WordTooltip key={`k-${i}`} word={segment} ipa={known.ipa} definition={known.definition} />];
+    }
+    return renderGenericWords(segment, `s-${i}`);
   });
 }
 
@@ -61,7 +76,7 @@ export function ManillaFolder({ caseFile, words, score }: ManillaFolderProps) {
         <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
           <div>
             <p className="mb-3 font-mono text-xs tracking-[0.15em] text-text-48 uppercase">Field report</p>
-            <p className="text-base leading-relaxed text-text-72">{highlightWords(caseFile, words)}</p>
+            <p className="text-base leading-relaxed text-text-72">{renderStory(caseFile, words)}</p>
           </div>
 
           <div>
