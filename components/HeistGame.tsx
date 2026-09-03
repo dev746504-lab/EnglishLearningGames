@@ -12,6 +12,7 @@ import { Timer } from "@/components/game/Timer";
 import { StrikeIndicator } from "@/components/game/StrikeIndicator";
 import { AnswerCard } from "@/components/game/AnswerCard";
 import { Button } from "@/components/ui/Button";
+import { HoverText } from "@/components/ui/HoverText";
 
 type Phase = "loading" | "playing" | "feedback" | "busted" | "error";
 
@@ -146,7 +147,9 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
   if (phase === "error") {
     return (
       <div className="px-6 py-16 md:px-14">
-        <p className="text-danger">{errorMessage}</p>
+        <p className="text-danger">
+          <HoverText keyPrefix="heist-error" text={errorMessage} />
+        </p>
         <Button className="mt-6" onClick={() => router.push("/vaults")}>
           Back to the board
         </Button>
@@ -157,7 +160,9 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
   if (phase === "loading" || !currentWord) {
     return (
       <div className="px-6 py-16 md:px-14">
-        <p className="font-mono text-sm text-text-48">Cracking the entry code...</p>
+        <p className="font-mono text-sm text-text-48">
+          <HoverText keyPrefix="heist-loading" text="Cracking the entry code..." />
+        </p>
       </div>
     );
   }
@@ -165,10 +170,15 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
   if (phase === "busted") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-        <p className="font-mono text-xs tracking-[0.2em] text-danger uppercase">Alarm tripped</p>
-        <h1 className="font-display mt-4 text-5xl text-text-100">Busted</h1>
+        <p className="font-mono text-xs tracking-[0.2em] text-danger uppercase">
+          <HoverText keyPrefix="heist-busted-eyebrow" text="Alarm tripped" />
+        </p>
+        <h1 className="font-display mt-4 text-5xl text-text-100">
+          <HoverText keyPrefix="heist-busted-h1" text="Busted" />
+        </h1>
         <p className="mt-4 max-w-md text-text-72">
-          Three wrong moves and the vault sealed itself. Final take: {score} brass.
+          <HoverText keyPrefix="heist-busted-p" text="Three wrong moves and the vault sealed itself. Final take:" />{" "}
+          {score} brass.
         </p>
         <div className="mt-8 flex gap-3">
           <Button onClick={() => router.push("/vaults")}>Back to the board</Button>
@@ -240,7 +250,10 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
         {currentWord.challengeType === "context" && (
           <div>
             <p className="font-display max-w-2xl text-2xl leading-snug text-text-100 md:text-3xl">
-              {currentWord.clozeSentence?.replace("___", "▁▁▁▁▁")}
+              <HoverText
+                keyPrefix={`cloze-${currentWord.wordId}`}
+                text={currentWord.clozeSentence?.replace("___", "▁▁▁▁▁") ?? ""}
+              />
             </p>
             <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {currentWord.options?.map((opt, i) => (
@@ -270,7 +283,9 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
             >
               <SpeakerHigh size={28} weight="fill" />
             </button>
-            <p className="mt-3 text-sm text-text-48">Tap to hear it. Type what you hear.</p>
+            <p className="mt-3 text-sm text-text-48">
+              <HoverText keyPrefix="heist-audio-hint" text="Tap to hear it. Type what you hear." />
+            </p>
             <input
               value={typedAnswer}
               onChange={(e) => setTypedAnswer(e.target.value)}
@@ -295,7 +310,10 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
             className="mt-8 flex items-center justify-between border-t border-[var(--border-hairline)] pt-6"
           >
             <p className={`text-sm ${isCorrect ? "text-success" : "text-danger"}`}>
-              {isCorrect ? "The tumbler clicks into place." : diegeticWrongLine(currentWord.challengeType)}
+              <HoverText
+                keyPrefix={`heist-feedback-${currentWord.wordId}`}
+                text={isCorrect ? "The tumbler clicks into place." : diegeticWrongLine(currentWord.challengeType)}
+              />
             </p>
             <Button variant="ghost" onClick={advance}>
               {index === words.length - 1 && !feedback?.busted ? "Open the file" : "Next"}

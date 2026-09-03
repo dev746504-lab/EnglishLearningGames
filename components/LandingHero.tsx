@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { getOrCreatePlayerId } from "@/lib/playerId";
 import { EASE_OUT } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
+import { HoverText } from "@/components/ui/HoverText";
 
 export function LandingHero() {
   const router = useRouter();
@@ -77,8 +78,10 @@ export function LandingHero() {
           transition={{ duration: 0.6, delay: 0.16, ease: EASE_OUT }}
           className="mt-5 max-w-md text-base leading-relaxed text-text-72"
         >
-          Every vault holds seven words worth stealing. Crack the definitions,
-          read the room, beat the clock. Three wrong moves and the alarm goes off.
+          <HoverText
+            keyPrefix="hero-sub"
+            text="Every vault holds seven words worth stealing. Crack the definitions, read the room, beat the clock. Three wrong moves and the alarm goes off."
+          />
         </motion.p>
 
         <motion.div
@@ -107,7 +110,7 @@ export function LandingHero() {
           </div>
           {error && (
             <p id="handle-error" className="mt-2 text-sm text-danger">
-              {error}
+              <HoverText keyPrefix="hero-error" text={error} />
             </p>
           )}
 

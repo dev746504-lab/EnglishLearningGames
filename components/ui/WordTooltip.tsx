@@ -8,6 +8,8 @@ interface WordTooltipProps {
   /** Present only for the run's target vault words. */
   ipa?: string;
   definition?: string;
+  /** Set false when nesting inside a Link/Button to avoid nested-focusable markup. */
+  interactive?: boolean;
 }
 
 // Shared across every WordTooltip instance on the page so repeated words
@@ -38,7 +40,7 @@ async function translateWord(word: string): Promise<string | null> {
 
 type TranslationState = { status: "idle" } | { status: "loading" } | { status: "done"; text: string | null };
 
-export function WordTooltip({ word, ipa, definition }: WordTooltipProps) {
+export function WordTooltip({ word, ipa, definition, interactive = true }: WordTooltipProps) {
   const isKnown = definition !== undefined;
   const [translation, setTranslation] = useState<TranslationState>({ status: "idle" });
   const tooltipId = useId();
@@ -68,10 +70,14 @@ export function WordTooltip({ word, ipa, definition }: WordTooltipProps) {
     );
 
   return (
-    <span className="group relative inline-block" onMouseEnter={handleTrigger} onFocus={handleTrigger}>
+    <span
+      className="group/wt relative inline-block"
+      onMouseEnter={handleTrigger}
+      onFocus={interactive ? handleTrigger : undefined}
+    >
       <span
-        tabIndex={0}
-        aria-describedby={tooltipId}
+        tabIndex={interactive ? 0 : undefined}
+        aria-describedby={interactive ? tooltipId : undefined}
         className={
           isKnown
             ? "cursor-help font-semibold text-brass underline decoration-dotted decoration-brass-dim underline-offset-4 outline-none"
@@ -84,7 +90,7 @@ export function WordTooltip({ word, ipa, definition }: WordTooltipProps) {
         id={tooltipId}
         role="tooltip"
         style={{ zIndex: Z.overlay }}
-        className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-max max-w-56 -translate-x-1/2 border border-[var(--border-hairline-strong)] bg-bg-elevated-2 px-3 py-2 text-left opacity-0 shadow-[var(--shadow-panel)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none"
+        className={`pointer-events-none absolute bottom-full left-1/2 mb-2 w-max max-w-56 -translate-x-1/2 border border-[var(--border-hairline-strong)] bg-bg-elevated-2 px-3 py-2 text-left opacity-0 shadow-[var(--shadow-panel)] transition-opacity duration-150 group-hover/wt:opacity-100 motion-reduce:transition-none ${interactive ? "group-focus-within/wt:opacity-100" : ""}`}
       >
         {ipa && <span className="block font-mono text-xs text-text-48">{ipa}</span>}
         {isKnown && <span className="mt-1 block text-sm leading-snug font-sans text-text-100">{definition}</span>}

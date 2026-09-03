@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { LockSimple, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getOrCreatePlayerId } from "@/lib/playerId";
 import { EASE_OUT } from "@/lib/constants";
+import { HoverText } from "@/components/ui/HoverText";
 
 interface VaultListItem {
   _id: string;
@@ -38,10 +39,12 @@ function VaultCard({ vault, featured, index }: { vault: VaultListItem; featured:
       <h3
         className={`font-display mt-3 ${featured ? "text-3xl md:text-4xl" : "text-2xl"} leading-tight text-text-100`}
       >
-        {vault.name}
+        <HoverText keyPrefix={`vault-name-${vault._id}`} text={vault.name} interactive={false} />
       </h3>
 
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-text-72">{vault.description}</p>
+      <p className="mt-2 max-w-md text-sm leading-relaxed text-text-72">
+        <HoverText keyPrefix={`vault-desc-${vault._id}`} text={vault.description} interactive={false} />
+      </p>
 
       <div className="mt-6 flex items-center justify-between">
         <span className="text-xs text-text-48">{vault.wordCount} words</span>
@@ -106,7 +109,11 @@ export function VaultGrid() {
   }, []);
 
   if (error) {
-    return <p className="px-6 py-16 text-danger md:px-14">{error}</p>;
+    return (
+      <p className="px-6 py-16 text-danger md:px-14">
+        <HoverText keyPrefix="vaultgrid-error" text={error} />
+      </p>
+    );
   }
 
   if (!vaults) {
@@ -135,10 +142,14 @@ export function VaultGrid() {
           <p className="font-mono text-xs tracking-[0.2em] text-text-48 uppercase">
             Optional practice
           </p>
-          <h2 className="font-display mt-3 text-3xl text-text-100">Training Files</h2>
+          <h2 className="font-display mt-3 text-3xl text-text-100">
+            <HoverText keyPrefix="training-heading" text="Training Files" />
+          </h2>
           <p className="mt-2 max-w-md text-sm text-text-72">
-            Foundational vocabulary drills. Doesn&apos;t count toward reputation or gate the
-            real vaults — always open, just practice.
+            <HoverText
+              keyPrefix="training-desc"
+              text="Foundational vocabulary drills. Doesn't count toward reputation or gate the real vaults — always open, just practice."
+            />
           </p>
 
           <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">

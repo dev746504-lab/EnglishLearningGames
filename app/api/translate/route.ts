@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+interface MyMemoryMatch {
+  translation?: string;
+  match?: number;
+}
+
 interface MyMemoryResponse {
-  responseData?: { translatedText?: string };
-  responseStatus?: number | string;
+  responseData?: { translatedText?: string; match?: number };
+  matches?: MyMemoryMatch[];
 }
 
 export async function GET(request: NextRequest) {
@@ -20,10 +25,22 @@ export async function GET(request: NextRequest) {
     if (!res.ok) throw new Error("translate failed");
 
     const data: MyMemoryResponse = await res.json();
-    const translation = data.responseData?.translatedText?.trim();
-    // MyMemory falls back to echoing the query untranslated when it has no match.
-    const isUseful = translation && translation.toLowerCase() !== word.toLowerCase();
-    return NextResponse.json({ word, translation: isUseful ? translation : null });
+
+    // MyMemory's top-level pick is sometimes a bad translation-memory entry
+    // that just echoes the English word back untranslated, even though a
+    // better match exists further down its own `matches` list — so rank all
+    // candidates ourselves and take the best one that isn't just an echo.
+    const candidates = [
+      { translation: data.responseData?.translatedText, match: data.responseData?.match ?? 1 },
+      ...(data.matches ?? []),
+    ];
+
+    const best = candidates
+      .map((c) => ({ translation: c.translation?.trim(), match: c.match ?? 0 }))
+      .filter((c) => c.translation && c.translation.toLowerCase() !== word.toLowerCase())
+      .sort((a, b) => b.match - a.match)[0];
+
+    return NextResponse.json({ word, translation: best?.translation ?? null });
   } catch {
     return NextResponse.json({ word, translation: null });
   }

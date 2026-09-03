@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/lib/constants";
+import { HoverText } from "@/components/ui/HoverText";
 
 interface Entry {
   rank: number;
@@ -25,10 +26,26 @@ export function Leaderboard() {
       .catch(() => setError("The ledger's locked. Try again shortly."));
   }, []);
 
-  if (error) return <p className="px-6 py-16 text-danger md:px-14">{error}</p>;
-  if (!entries) return <p className="px-6 py-16 font-mono text-sm text-text-48 md:px-14">Reading the ledger...</p>;
+  if (error) {
+    return (
+      <p className="px-6 py-16 text-danger md:px-14">
+        <HoverText keyPrefix="lb-error" text={error} />
+      </p>
+    );
+  }
+  if (!entries) {
+    return (
+      <p className="px-6 py-16 font-mono text-sm text-text-48 md:px-14">
+        <HoverText keyPrefix="lb-loading" text="Reading the ledger..." />
+      </p>
+    );
+  }
   if (entries.length === 0) {
-    return <p className="px-6 py-16 text-text-72 md:px-14">No reputations on file yet. Crack a vault to be first.</p>;
+    return (
+      <p className="px-6 py-16 text-text-72 md:px-14">
+        <HoverText keyPrefix="lb-empty" text="No reputations on file yet. Crack a vault to be first." />
+      </p>
+    );
   }
 
   const podium = entries.slice(0, 3);

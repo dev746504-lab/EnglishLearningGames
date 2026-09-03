@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { WordTooltip } from "@/components/ui/WordTooltip";
+import { hoverWords } from "@/components/ui/HoverText";
 
 interface WordRecap {
   word: string;
@@ -23,19 +23,8 @@ interface ManillaFolderProps {
 // Vault words (which can be multi-word phrases, e.g. "cut corners") are
 // matched as whole phrases first and keep their locked-in definition; every
 // other word is tokenized individually and looked up on hover (WordTooltip).
-function renderGenericWords(segment: string, keyPrefix: string) {
-  const tokens = segment.split(/([A-Za-z']+)/);
-  return tokens.map((token, i) =>
-    /[A-Za-z]/.test(token) ? (
-      <WordTooltip key={`${keyPrefix}-${i}`} word={token} />
-    ) : (
-      <Fragment key={`${keyPrefix}-${i}`}>{token}</Fragment>
-    )
-  );
-}
-
 function renderStory(text: string, words: WordRecap[]) {
-  if (words.length === 0) return renderGenericWords(text, "s");
+  if (words.length === 0) return hoverWords(text, "s");
 
   const wordMap = new Map(words.map((w) => [w.word.toLowerCase(), w]));
   const escaped = [...words]
@@ -49,7 +38,7 @@ function renderStory(text: string, words: WordRecap[]) {
     if (known) {
       return [<WordTooltip key={`k-${i}`} word={segment} ipa={known.ipa} definition={known.definition} />];
     }
-    return renderGenericWords(segment, `s-${i}`);
+    return hoverWords(segment, `s-${i}`);
   });
 }
 
