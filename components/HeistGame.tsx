@@ -16,6 +16,14 @@ import { HoverText } from "@/components/ui/HoverText";
 
 type Phase = "loading" | "playing" | "feedback" | "busted" | "error";
 
+interface AnswerExplanation {
+  word: string;
+  ipa: string;
+  partOfSpeech: string;
+  definition: string;
+  exampleSentence: string;
+}
+
 interface AnswerResponse {
   correct: boolean;
   correctAnswer: string;
@@ -24,6 +32,7 @@ interface AnswerResponse {
   strikes: number;
   streak: number;
   busted: boolean;
+  explanation: AnswerExplanation | null;
 }
 
 export function HeistGame({ vaultId }: { vaultId: string }) {
@@ -307,7 +316,7 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mt-8 flex items-center justify-between border-t border-[var(--border-hairline)] pt-6"
+            className="mt-8 border-t border-[var(--border-hairline)] pt-6"
           >
             <p className={`text-sm ${isCorrect ? "text-success" : "text-danger"}`}>
               <HoverText
@@ -315,9 +324,38 @@ export function HeistGame({ vaultId }: { vaultId: string }) {
                 text={isCorrect ? "The tumbler clicks into place." : diegeticWrongLine(currentWord.challengeType)}
               />
             </p>
-            <Button variant="ghost" onClick={advance}>
-              {index === words.length - 1 && !feedback?.busted ? "Open the file" : "Next"}
-            </Button>
+
+            {feedback?.explanation && (
+              <div className="mt-4 border border-[var(--border-hairline-strong)] bg-bg-elevated p-4 md:p-5">
+                <p className="font-mono text-xs tracking-[0.15em] text-text-48 uppercase">
+                  {isCorrect ? "Cracked" : "Answer key"}
+                </p>
+                <h3 className="font-display mt-2 text-2xl text-brass">{feedback.explanation.word}</h3>
+                <p className="mt-1 font-mono text-xs text-text-48">
+                  {feedback.explanation.ipa} · {feedback.explanation.partOfSpeech}
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-text-72">
+                  <HoverText
+                    keyPrefix={`heist-def-${currentWord.wordId}`}
+                    text={feedback.explanation.definition}
+                  />
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-text-48 italic">
+                  &ldquo;
+                  <HoverText
+                    keyPrefix={`heist-ex-${currentWord.wordId}`}
+                    text={feedback.explanation.exampleSentence}
+                  />
+                  &rdquo;
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <Button variant="ghost" onClick={advance}>
+                {index === words.length - 1 && !feedback?.busted ? "Open the file" : "Next"}
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

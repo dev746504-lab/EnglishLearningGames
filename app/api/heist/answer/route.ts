@@ -72,6 +72,10 @@ export async function POST(req: NextRequest) {
       .updateOne({ _id: run._id }, { $push: { wrongWords: new ObjectId(wordId) } });
   }
 
+  // The round for this word is over either way, so it's safe to reveal the
+  // full explanation (word, definition, example) the client never got up front.
+  const wordDoc = await db.collection("words").findOne({ _id: new ObjectId(wordId) });
+
   return NextResponse.json({
     correct,
     correctAnswer: runWord.correctAnswer,
@@ -80,6 +84,15 @@ export async function POST(req: NextRequest) {
     strikes: newStrikes,
     streak: newStreak,
     busted,
+    explanation: wordDoc
+      ? {
+          word: wordDoc.word as string,
+          ipa: wordDoc.ipa as string,
+          partOfSpeech: wordDoc.partOfSpeech as string,
+          definition: wordDoc.definition as string,
+          exampleSentence: wordDoc.exampleSentence as string,
+        }
+      : null,
   });
 }
 

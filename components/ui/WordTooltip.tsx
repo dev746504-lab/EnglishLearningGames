@@ -14,10 +14,10 @@ interface WordTooltipProps {
 
 // Shared across every WordTooltip instance on the page so repeated words
 // (e.g. "the", "a") only ever trigger one network request each.
-const cache = new Map<string, string | null>();
-const inflight = new Map<string, Promise<string | null>>();
+const cache = new Map<string, string[] | null>();
+const inflight = new Map<string, Promise<string[] | null>>();
 
-async function translateWord(word: string): Promise<string | null> {
+async function translateWord(word: string): Promise<string[] | null> {
   const key = word.toLowerCase();
   const cached = cache.get(key);
   if (cached !== undefined) return cached;
@@ -26,19 +26,19 @@ async function translateWord(word: string): Promise<string | null> {
   if (pending) return pending;
 
   const promise = fetch(`/api/translate?word=${encodeURIComponent(word)}`)
-    .then((res) => (res.ok ? res.json() : { translation: null }))
-    .catch(() => ({ translation: null }))
-    .then((result: { translation: string | null }) => {
-      cache.set(key, result.translation);
+    .then((res) => (res.ok ? res.json() : { translations: null }))
+    .catch(() => ({ translations: null }))
+    .then((result: { translations: string[] | null }) => {
+      cache.set(key, result.translations);
       inflight.delete(key);
-      return result.translation;
+      return result.translations;
     });
 
   inflight.set(key, promise);
   return promise;
 }
 
-type TranslationState = { status: "idle" } | { status: "loading" } | { status: "done"; text: string | null };
+type TranslationState = { status: "idle" } | { status: "loading" } | { status: "done"; senses: string[] | null };
 
 export function WordTooltip({ word, ipa, definition, interactive = true }: WordTooltipProps) {
   const isKnown = definition !== undefined;
@@ -54,17 +54,29 @@ export function WordTooltip({ word, ipa, definition, interactive = true }: WordT
     const key = word.toLowerCase();
     const cached = cache.get(key);
     if (cached !== undefined) {
-      setTranslation({ status: "done", text: cached });
+      setTranslation({ status: "done", senses: cached });
       return;
     }
 
     setTranslation({ status: "loading" });
-    translateWord(word).then((text) => setTranslation({ status: "done", text }));
+    translateWord(word).then((senses) => setTranslation({ status: "done", senses }));
   }
 
   const viMeaning =
     translation.status === "done" ? (
-      translation.text ?? <span className="text-text-48">Không tìm thấy nghĩa.</span>
+      translation.senses && translation.senses.length > 0 ? (
+        translation.senses.length === 1 ? (
+          translation.senses[0]
+        ) : (
+          <ul className="list-disc space-y-0.5 pl-4">
+            {translation.senses.map((sense, i) => (
+              <li key={i}>{sense}</li>
+            ))}
+          </ul>
+        )
+      ) : (
+        <span className="text-text-48">Không tìm thấy nghĩa.</span>
+      )
     ) : (
       <span className="text-text-48">Đang tra...</span>
     );
@@ -90,7 +102,7 @@ export function WordTooltip({ word, ipa, definition, interactive = true }: WordT
         id={tooltipId}
         role="tooltip"
         style={{ zIndex: Z.overlay }}
-        className={`pointer-events-none absolute bottom-full left-1/2 mb-2 w-max max-w-56 -translate-x-1/2 border border-[var(--border-hairline-strong)] bg-bg-elevated-2 px-3 py-2 text-left opacity-0 shadow-[var(--shadow-panel)] transition-opacity duration-150 group-hover/wt:opacity-100 motion-reduce:transition-none ${interactive ? "group-focus-within/wt:opacity-100" : ""}`}
+        className={`pointer-events-none absolute bottom-full left-1/2 mb-2 w-max max-w-72 -translate-x-1/2 border border-[var(--border-hairline-strong)] bg-bg-elevated-2 px-3 py-2 text-left opacity-0 shadow-[var(--shadow-panel)] transition-opacity duration-150 group-hover/wt:opacity-100 motion-reduce:transition-none ${interactive ? "group-focus-within/wt:opacity-100" : ""}`}
       >
         {ipa && <span className="block font-mono text-xs text-text-48">{ipa}</span>}
         {isKnown && <span className="mt-1 block text-sm leading-snug font-sans text-text-100">{definition}</span>}
