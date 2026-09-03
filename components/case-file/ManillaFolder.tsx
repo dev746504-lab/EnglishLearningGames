@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
+import { WordTooltip } from "@/components/ui/WordTooltip";
 
 interface WordRecap {
   word: string;
@@ -18,22 +19,23 @@ interface ManillaFolderProps {
   score: number;
 }
 
-function highlightWords(text: string, words: string[]) {
+function highlightWords(text: string, words: WordRecap[]) {
   if (words.length === 0) return [text];
-  const escaped = [...words].sort((a, b) => b.length - a.length).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const escaped = [...words]
+    .sort((a, b) => b.word.length - a.word.length)
+    .map((w) => w.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
   const parts = text.split(pattern);
-  const wordSet = new Set(words.map((w) => w.toLowerCase()));
+  const wordMap = new Map(words.map((w) => [w.word.toLowerCase(), w]));
 
-  return parts.map((part, i) =>
-    wordSet.has(part.toLowerCase()) ? (
-      <strong key={i} className="font-semibold text-brass">
-        {part}
-      </strong>
+  return parts.map((part, i) => {
+    const match = wordMap.get(part.toLowerCase());
+    return match ? (
+      <WordTooltip key={i} word={part} ipa={match.ipa} definition={match.definition} />
     ) : (
       <Fragment key={i}>{part}</Fragment>
-    )
-  );
+    );
+  });
 }
 
 export function ManillaFolder({ caseFile, words, score }: ManillaFolderProps) {
@@ -59,7 +61,7 @@ export function ManillaFolder({ caseFile, words, score }: ManillaFolderProps) {
         <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
           <div>
             <p className="mb-3 font-mono text-xs tracking-[0.15em] text-text-48 uppercase">Field report</p>
-            <p className="text-base leading-relaxed text-text-72">{highlightWords(caseFile, words.map((w) => w.word))}</p>
+            <p className="text-base leading-relaxed text-text-72">{highlightWords(caseFile, words)}</p>
           </div>
 
           <div>
